@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -35,27 +36,29 @@ namespace FireSmokeInfrared
                 DragMove();
             }
         }
-        ADAM4150 equipment = new ADAM4150(new ComSettingModel());
+        
 
         private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
         {
-            if (equipment.CheckSerialPort(equipment.ADAM4017Provider).Status == RunStatus.Success)
-            {
-                var timer = new LazyTimer(_sender =>
+            var timer = new Timer(_sender =>
                 {
-                    var t = (LazyTimer) _sender[0];
-                    equipment.SetData();
-                    Application.Current.Dispatcher.Invoke(() =>
+                var equipment = new ADAM4150(new ComSettingModel());
+                    if (equipment.CheckSerialPort(equipment.ADAM4017Provider).Status == RunStatus.Success)
                     {
-                        Fire.Background = equipment.fireValue ? Brushes.Tomato : Brushes.CornflowerBlue;
-                        Smoke.Background = equipment.smokeValue ? Brushes.Tomato : Brushes.CornflowerBlue;
-                        BodyInfrared.Background = equipment.bodyInfraredValue ? Brushes.Tomato : Brushes.CornflowerBlue;
-                        
-                    });
-                    t.Reset();
-                }, 100, 1000);
+                        equipment.SetData();
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            Fire.Background = equipment.fireValue ? Brushes.Tomato : Brushes.CornflowerBlue;
+                            Smoke.Background = equipment.smokeValue ? Brushes.Tomato : Brushes.CornflowerBlue;
+                            BodyInfrared.Background = equipment.bodyInfraredValue
+                                ? Brushes.Tomato
+                                : Brushes.CornflowerBlue;
+
+                        });
+                    }
+                },null, 100, 1000);
             }
-        }
+        
 
         private void closeBotton(object sender, RoutedEventArgs e)
         {
